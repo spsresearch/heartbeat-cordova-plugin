@@ -1,4 +1,4 @@
-package com.litekey.cordova.plugins.heartbeat;
+package com.vgc.cordova.plugins.heartbeat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
