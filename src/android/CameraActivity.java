@@ -2,19 +2,25 @@ package com.vgc.cordova.plugins.heartbeat;
 
 import org.apache.cordova.CordovaActivity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 public class CameraActivity extends CordovaActivity {
 
 	private static final String TAG = "CameraActivity";
+	private static final int CAMERA_REQUEST_CODE = 100;
 
 	private int fps;
 	private int seconds;
@@ -32,7 +38,17 @@ public class CameraActivity extends CordovaActivity {
 		setContentView(getResources().getIdentifier("foregroundcamera",
 				"layout", getPackageName()));
 
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+			initCamera();
+		}
+		else {
+			requestCameraPermission();
+		}
+	}
+
+	private void initCamera() {
 		camera = getCameraInstance();
+
 		try {
 			Camera.Parameters params = camera.getParameters();
 			params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
@@ -63,7 +79,30 @@ public class CameraActivity extends CordovaActivity {
 		ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
 				LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		layout.addView(preview, layoutParams);
+	}
 
+	public void requestCameraPermission() {
+		if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+			requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST_CODE);
+		}
+		else {
+			initCamera();
+		}
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+		if (requestCode == CAMERA_REQUEST_CODE) {
+			if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				//Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
+				initCamera();
+			} else {
+				//Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
+				CameraActivity.this.finish();
+			}
+		}
 	}
 
 	public static Camera getCameraInstance() {
@@ -125,7 +164,7 @@ public class CameraActivity extends CordovaActivity {
 			camera.addCallbackBuffer(buffer);
 			count++;
 			if (count == (seconds * fps)) {
-				int bpm = detection.getHeartBeat(fps);				
+				int bpm = detection.getHeartBeat(fps);
 				Intent intent = new Intent();
 				intent.putExtra(HeartBeatPlugin.BPM_KEY, bpm);
 				CameraActivity.this.setResult(RESULT_OK, intent);
