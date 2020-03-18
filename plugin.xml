@@ -6,7 +6,7 @@
   <name>HeartBeat</name>
   <description>Cordova Heart Beat Monitor</description>
   <keywords>cordova,heart,beat,rate,bpm</keywords>
-  <repo>https://github.com/vgctotero/heartbeat-cordova-plugin</repo>
+  <repo>https://github.com/LINKIT-group/heartbeat-cordova-plugin</repo>
 
   <engines>
     <engine name="cordova" version=">=3.4.0"/>

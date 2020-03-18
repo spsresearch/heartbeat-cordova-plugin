@@ -11,7 +11,7 @@ The plugin opens device's camera and turn on the lightflash next  you must to pu
 Install
 -------
 
-	cordova plugin add https://github.com/vgctotero/heartbeat-cordova-plugin
+	cordova plugin add https://github.com/LINKIT-group/heartbeat-cordova-plugin
 
 Methods
 -------
