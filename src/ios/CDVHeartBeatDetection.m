@@ -16,7 +16,6 @@
 {
     self.dataPointsHue = [[NSMutableArray alloc] init];
     self.session = [[AVCaptureSession alloc] init];
-    self.session.sessionPreset = AVCaptureSessionPresetLow;
 
     NSArray *devices = [AVCaptureDevice devices];
     AVCaptureDevice *captureDevice;
@@ -31,16 +30,23 @@
             }
         }
     }
-    
-    NSError *error;
+
+    // switch on torch mode - can't detect the pulse without it
+    if([captureDevice isTorchModeSupported:AVCaptureTorchModeOn]) {
+        [captureDevice lockForConfiguration:nil];
+        captureDevice.torchMode=AVCaptureTorchModeOn;
+        [captureDevice unlockForConfiguration];
+    }
+
+    NSError *error=nil;
     AVCaptureDeviceInput *input = [[AVCaptureDeviceInput alloc] initWithDevice:captureDevice error:&error];
-    [self.session addInput:input];
     
     if (error)
     {
-        NSLog(@"%@", error);
+        NSLog(@"Error to create camera capture:%@", error);
     }
 
+/*
     AVCaptureDeviceFormat *currentFormat;
     for (AVCaptureDeviceFormat *format in captureDevice.formats)
     {
@@ -52,37 +58,40 @@
             currentFormat = format;
         }
     }
-
-/* move to after startRunning, because the flashlight is turning off when measuring */
-  /*  
+*/
+/*
     [captureDevice lockForConfiguration:nil];
-    captureDevice.torchMode=AVCaptureTorchModeOn;
+    //captureDevice.torchMode=AVCaptureTorchModeOn;
     captureDevice.activeFormat = currentFormat;
     captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
     captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
     [captureDevice unlockForConfiguration];
-  */
-  
+*/  
+    // Set the output
     AVCaptureVideoDataOutput* videoOutput = [[AVCaptureVideoDataOutput alloc] init];
     
-    dispatch_queue_t captureQueue=dispatch_queue_create("catpureQueue", NULL);
+    // create a queue to run the capture on
+    dispatch_queue_t captureQueue=dispatch_queue_create("captureQueue", NULL);
     
+    // setup ourself up as the capture delegate
     [videoOutput setSampleBufferDelegate:self queue:captureQueue];
-    videoOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey,
-                                 nil];
-    videoOutput.alwaysDiscardsLateVideoFrames = NO;
+
+    // configure the pixel format    
+    videoOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
+
+    // set the minimum acceptable frame rate to 10 fps
+    videoOutput.minFrameDuration=CMTimeMake(1, 10);
+    //videoOutput.alwaysDiscardsLateVideoFrames = NO;
+    
+    // and the size of the frames we want - we'll use the smallest frame size available
+    [self.session setSessionPreset:AVCaptureSessionPresetLow];
+
+    // Add the input and output
+    [self.session addInput:input];
     [self.session addOutput:videoOutput];
+
+    // Start the session    
     [self.session startRunning];
-
-    [captureDevice lockForConfiguration:nil];
-
-    captureDevice.torchMode=AVCaptureTorchModeOn;
-    captureDevice.setFlashMode=AVCaptureFlashModeOn;
-    captureDevice.activeFormat = currentFormat;
-    captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
-    captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
-    [captureDevice unlockForConfiguration];
-
     
     if (self.delegate)
     {
