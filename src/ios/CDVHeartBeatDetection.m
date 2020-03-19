@@ -75,7 +75,9 @@
     [self.session startRunning];
 
     [captureDevice lockForConfiguration:nil];
+
     captureDevice.torchMode=AVCaptureTorchModeOn;
+    captureDevice.setFlashMode=AVCaptureFlashModeOn;
     captureDevice.activeFormat = currentFormat;
     captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
     captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
