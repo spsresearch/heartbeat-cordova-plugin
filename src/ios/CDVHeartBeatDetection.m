@@ -31,15 +31,6 @@
         }
     }
 
-    // switch on torch mode - can't detect the pulse without it
-    if([captureDevice isTorchModeSupported:AVCaptureTorchModeOn]) {
-        [captureDevice lockForConfiguration:nil];
-        captureDevice.torchMode=AVCaptureTorchModeOn;
-        [captureDevice unlockForConfiguration];
-    }
-
-
-
     AVCaptureDeviceFormat *currentFormat;
     for (AVCaptureDeviceFormat *format in captureDevice.formats)
     {
@@ -52,11 +43,11 @@
         }
     }
 
-
     [captureDevice lockForConfiguration:nil];
+    captureDevice.torchMode=AVCaptureTorchModeOn;
     captureDevice.activeFormat = currentFormat;
-//    captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
-//    captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
+    captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
+    captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
     [captureDevice unlockForConfiguration];
   
 
@@ -80,9 +71,6 @@
     // configure the pixel format    
     videoOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
 
-    // set the minimum acceptable frame rate to 10 fps
-    videoOutput.minFrameDuration = CMTimeMake(1, self.fps);
-    videoOutput.MaxFrameDuration = CMTimeMake(1, self.fps);
     videoOutput.alwaysDiscardsLateVideoFrames = NO;
     
     // and the size of the frames we want - we'll use the smallest frame size available
