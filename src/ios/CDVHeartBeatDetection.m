@@ -56,7 +56,6 @@
     }
 
     [captureDevice lockForConfiguration:nil];
-    //captureDevice.torchMode=AVCaptureTorchModeOn;
     captureDevice.activeFormat = currentFormat;
     captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
     captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
@@ -95,6 +94,19 @@
     // Start the session    
     [self.session startRunning];
     
+    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if ([device hasFlash]){
+        [device lockForConfiguration:nil];
+        [device setFlashMode:AVCaptureFlashModeOn];
+        [device unlockForConfiguration];
+    }
+
+    if ([device hasTorch]){
+        [device lockForConfiguration:nil];
+        [device setTorchMode:AVCaptureTorchModeOn];
+        [device unlockForConfiguration];
+    }
+
     if (self.delegate)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -106,7 +118,20 @@
 - (void)stopDetection
 {
     [self.session stopRunning];
-    
+
+    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if ([device hasFlash]){
+        [device lockForConfiguration:nil];
+        [device setFlashMode:AVCaptureFlashModeOff];
+        [device unlockForConfiguration];
+    }
+
+    if ([device hasTorch]){
+        [device lockForConfiguration:nil];
+        [device setTorchMode:AVCaptureTorchModeOff];
+        [device unlockForConfiguration];
+    }
+
     if (self.delegate)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
