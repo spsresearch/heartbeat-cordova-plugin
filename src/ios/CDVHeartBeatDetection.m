@@ -18,6 +18,7 @@
     self.session = [[AVCaptureSession alloc] init];
     self.session.sessionPreset = AVCaptureSessionPresetLow;
 
+    // Get the back-camera to capture the Video
     NSArray *devices = [AVCaptureDevice devices];
     AVCaptureDevice *captureDevice;
     for (AVCaptureDevice *device in devices)
@@ -32,6 +33,7 @@
         }
     }
     
+    // Add the device to capture the Video Input to the session
     NSError *error;
     AVCaptureDeviceInput *input = [[AVCaptureDeviceInput alloc] initWithDevice:captureDevice error:&error];
     [self.session addInput:input];
@@ -41,6 +43,7 @@
         NSLog(@"%@", error);
     }
 
+    // Set the format of the video.
     AVCaptureDeviceFormat *currentFormat;
     for (AVCaptureDeviceFormat *format in captureDevice.formats)
     {
@@ -53,24 +56,49 @@
         }
     }
     
+    // Configure the camera settings
     [captureDevice lockForConfiguration:nil];
-    captureDevice.torchMode=AVCaptureTorchModeOn;
+    // Flash/Torch can't be turned on before the camera is running.
+    // captureDevice.torchMode=AVCaptureTorchModeOn;
+
+    // Assign the format that is set in the previous step.
     captureDevice.activeFormat = currentFormat;
+    
+    // The fixed framerate is needed to calculate the time running based on frames.
     captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
     captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
     [captureDevice unlockForConfiguration];
     
+    // Set the output video that is needed to calculate the heartrate.
     AVCaptureVideoDataOutput* videoOutput = [[AVCaptureVideoDataOutput alloc] init];
     
-    dispatch_queue_t captureQueue=dispatch_queue_create("catpureQueue", NULL);
+    // Create a queue of frames that are captured.
+    dispatch_queue_t captureQueue=dispatch_queue_create("captureQueue", NULL);
     
+    // Configure the output settings.
     [videoOutput setSampleBufferDelegate:self queue:captureQueue];
     videoOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey,
                                  nil];
     videoOutput.alwaysDiscardsLateVideoFrames = NO;
     [self.session addOutput:videoOutput];
+    
+    // Start the camera
     [self.session startRunning];
     
+    // Turn on the flash and/or torch - Turning on both instead of only the torch saves battery-consumption
+    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if ([device hasFlash]){
+        [device lockForConfiguration:nil];
+        [device setFlashMode:AVCaptureFlashModeOn];
+        [device unlockForConfiguration];
+    }
+
+    if ([device hasTorch]){
+        [device lockForConfiguration:nil];
+        [device setTorchMode:AVCaptureTorchModeOn];
+        [device unlockForConfiguration];
+    }
+
     if (self.delegate)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -82,7 +110,21 @@
 - (void)stopDetection
 {
     [self.session stopRunning];
-    
+
+    // Turn off the flash and/or torch
+    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if ([device hasFlash]){
+        [device lockForConfiguration:nil];
+        [device setFlashMode:AVCaptureFlashModeOff];
+        [device unlockForConfiguration];
+    }
+
+    if ([device hasTorch]){
+        [device lockForConfiguration:nil];
+        [device setTorchMode:AVCaptureTorchModeOff];
+        [device unlockForConfiguration];
+    }
+
     if (self.delegate)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
