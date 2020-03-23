@@ -38,8 +38,15 @@
         [captureDevice unlockForConfiguration];
     }
 
+    NSError *error=nil;
+    AVCaptureDeviceInput *videoInput = [[AVCaptureDeviceInput alloc] initWithDevice:captureDevice error:&error];
+    
+    if (error)
+    {
+        NSLog(@"Error to create camera capture:%@", error);
+    }
 
-
+/*
     AVCaptureDeviceFormat *currentFormat;
     for (AVCaptureDeviceFormat *format in captureDevice.formats)
     {
@@ -51,23 +58,15 @@
             currentFormat = format;
         }
     }
-
-
+*/
+/*
     [captureDevice lockForConfiguration:nil];
+    //captureDevice.torchMode=AVCaptureTorchModeOn;
     captureDevice.activeFormat = currentFormat;
-//    captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
-//    captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
+    captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
+    captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
     [captureDevice unlockForConfiguration];
-  
-
-    NSError *error=nil;
-    AVCaptureDeviceInput *videoInput = [[AVCaptureDeviceInput alloc] initWithDevice:captureDevice error:&error];
-    
-    if (error)
-    {
-        NSLog(@"Error to create camera capture:%@", error);
-    }
-
+*/  
     // Set the output
     AVCaptureVideoDataOutput* videoOutput = [[AVCaptureVideoDataOutput alloc] init];
     
@@ -79,6 +78,18 @@
 
     // configure the pixel format    
     videoOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
+
+    if([videoInput isTorchModeSupported:AVCaptureTorchModeOn]) {
+        [videoInput lockForConfiguration:nil];
+        videoInput.torchMode=AVCaptureTorchModeOn;
+        [videoInput unlockForConfiguration];
+    }
+
+    if([videoOutput isTorchModeSupported:AVCaptureTorchModeOn]) {
+        [videoOutput lockForConfiguration:nil];
+        videoOutput.torchMode=AVCaptureTorchModeOn;
+        [videoOutput unlockForConfiguration];
+    }
 
     // set the minimum acceptable frame rate to 10 fps
     videoOutput.minFrameDuration = CMTimeMake(1, self.fps);
