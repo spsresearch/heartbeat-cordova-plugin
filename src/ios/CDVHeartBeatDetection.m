@@ -52,17 +52,14 @@
             currentFormat = format;
         }
     }
-
-/* move to after startRunning, because the flashlight is turning off when measuring */
-  /*  
+    
     [captureDevice lockForConfiguration:nil];
     captureDevice.torchMode=AVCaptureTorchModeOn;
     captureDevice.activeFormat = currentFormat;
     captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
     captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
     [captureDevice unlockForConfiguration];
-  */
-  
+    
     AVCaptureVideoDataOutput* videoOutput = [[AVCaptureVideoDataOutput alloc] init];
     
     dispatch_queue_t captureQueue=dispatch_queue_create("catpureQueue", NULL);
@@ -73,14 +70,6 @@
     videoOutput.alwaysDiscardsLateVideoFrames = NO;
     [self.session addOutput:videoOutput];
     [self.session startRunning];
-
-    [captureDevice lockForConfiguration:nil];
-    captureDevice.torchMode=AVCaptureTorchModeOn;
-    captureDevice.activeFormat = currentFormat;
-    captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
-    captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
-    [captureDevice unlockForConfiguration];
-
     
     if (self.delegate)
     {
