@@ -39,7 +39,7 @@
     }
 
     NSError *error=nil;
-    AVCaptureDeviceInput *videoInput = [[AVCaptureDeviceInput alloc] initWithDevice:captureDevice error:&error];
+    AVCaptureDeviceInput *input = [[AVCaptureDeviceInput alloc] initWithDevice:captureDevice error:&error];
     
     if (error)
     {
@@ -79,28 +79,15 @@
     // configure the pixel format    
     videoOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
 
-    if([videoInput isTorchModeSupported:AVCaptureTorchModeOn]) {
-        [videoInput lockForConfiguration:nil];
-        videoInput.torchMode=AVCaptureTorchModeOn;
-        [videoInput unlockForConfiguration];
-    }
-
-    if([videoOutput isTorchModeSupported:AVCaptureTorchModeOn]) {
-        [videoOutput lockForConfiguration:nil];
-        videoOutput.torchMode=AVCaptureTorchModeOn;
-        [videoOutput unlockForConfiguration];
-    }
-
     // set the minimum acceptable frame rate to 10 fps
-    videoOutput.minFrameDuration = CMTimeMake(1, self.fps);
-    videoOutput.MaxFrameDuration = CMTimeMake(1, self.fps);
-    videoOutput.alwaysDiscardsLateVideoFrames = NO;
+    videoOutput.minFrameDuration=CMTimeMake(1, 10);
+    //videoOutput.alwaysDiscardsLateVideoFrames = NO;
     
     // and the size of the frames we want - we'll use the smallest frame size available
     [self.session setSessionPreset:AVCaptureSessionPresetLow];
 
     // Add the input and output
-    [self.session addInput:videoInput];
+    [self.session addInput:input];
     [self.session addOutput:videoOutput];
 
     // Start the session    
