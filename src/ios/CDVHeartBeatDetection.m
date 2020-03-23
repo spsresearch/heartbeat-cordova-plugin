@@ -43,20 +43,8 @@
         }
     }
 
-    if ([captureDevice hasFlash]){
-        [captureDevice lockForConfiguration:nil];
-        [captureDevice setFlashMode:AVCaptureFlashModeOn];
-        [captureDevice unlockForConfiguration];
-    }
-
-    if ([captureDevice hasTorch]){
-        [captureDevice lockForConfiguration:nil];
-        [captureDevice setTorchMode:AVCaptureTorchModeOn];
-        [captureDevice unlockForConfiguration];
-    }
-
     [captureDevice lockForConfiguration:nil];
-    //captureDevice.torchMode=AVCaptureTorchModeOn;
+    captureDevice.torchMode=AVCaptureTorchModeOn;
     captureDevice.activeFormat = currentFormat;
     captureDevice.activeVideoMinFrameDuration = CMTimeMake(1, self.fps);
     captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, self.fps);
